@@ -3,99 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <title>Sterownik Akwarystyczny (MQTT)</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f0f8ff; margin: 20px; }
-    h1 { color: #0066cc; }
-    h2 { color: #004c99; }
-    .section { background: #ffffff; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0px 2px 5px rgba(0,0,0,0.1); }
-    button { padding: 8px 12px; margin: 4px 2px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #004c99; }
-    input[type='text'] { padding: 5px; border: 1px solid #ccc; border-radius: 4px; width: 40px; }
-  </style>
 </head>
 <body>
+  <h1>Akwarium MQTT</h1>
+  <p>Czas: <span id="localTime">--:--</span></p>
+  <p>Temperatura: <span id="temp">--</span>°C / Cel: <span id="target">--</span>°C</p>
 
-<h1>Sterownik Akwarystyczny (MQTT)</h1>
-<p>Czas lokalny: <strong><span id="localTime">--:--</span></strong></p>
+  <button onclick="publish('aquarium/light','on')">Światło ON</button>
+  <button onclick="publish('aquarium/light','off')">Światło OFF</button>
+  <br><br>
 
-<div class="section">
-  <h2>Oświetlenie</h2>
-  <button onclick="publish('aquarium/light', 'on')">Włącz</button>
-  <button onclick="publish('aquarium/light', 'off')">Wyłącz</button>
-</div>
+  <button onclick="publish('aquarium/pump','on')">Pompka ON</button>
+  <button onclick="publish('aquarium/pump','off')">Pompka OFF</button>
+  <br><br>
 
-<div class="section">
-  <h2>Grzałka</h2>
-  <p>Aktualna temperatura: <strong><span id="temp">--</span> °C</strong></p>
-  <p>Temperatura zadana: <strong><span id="target">--</span> °C</strong></p>
-  <p>Ustaw nową temperaturę: <input type="text" id="setTemp"> <button onclick="setHeater()">Ustaw</button></p>
-</div>
+  <input id="setTemp" placeholder="25.0"> <button onclick="setTemp()">Ustaw temp</button>
+  <br><br>
 
-<div class="section">
-  <h2>Pompka</h2>
-  <button onclick="publish('aquarium/pump', 'on')">Włącz</button>
-  <button onclick="publish('aquarium/pump', 'off')">Wyłącz</button>
-</div>
+  <input id="h1">:<input id="m1"> <input id="h2">:<input id="m2">
+  <button onclick="setFeed()">Ustaw karmienie</button>
+  <br><br>
 
-<div class="section">
-  <h2>Karmienie</h2>
-  <p>Karmienie 1: <strong><span id="feed1">--:--</span></strong></p>
-  <p>Karmienie 2: <strong><span id="feed2">--:--</span></strong></p>
-  <p>
-    Karmienie 1 - Godzina: <input type="text" id="h1"> Minuta: <input type="text" id="m1"><br>
-    Karmienie 2 - Godzina: <input type="text" id="h2"> Minuta: <input type="text" id="m2">
-    <button onclick="setFeedTimes()">Ustaw godziny</button>
-  </p>
-  <button onclick="publish('aquarium/feed', 'now')">Podaj pokarm (manualnie)</button>
-</div>
+  <button onclick="publish('aquarium/feed','now')">Podaj pokarm</button>
 
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-<script>
-  const options = {
-    clientId: "WebClient_" + Math.random().toString(16).substr(2, 8),
-    username: "Strona",
-    password: "Haslo123"
-  };
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script>
+    const client = mqtt.connect("wss://58ec15cbf38243588a5903e2ad4e9c1c.s1.eu.hivemq.cloud:8884/mqtt", {
+      clientId: "WebClient_" + Math.random().toString(16).substr(2, 8),
+      username: "Strona",  // wpisz swój login
+      password: "Haslo123"  // wpisz swoje hasło
+    });
 
-  const client = mqtt.connect("ws://58ec15cbf38243588a5903e2ad4e9c1c.s1.eu.hivemq.cloud:8884/mqtt", options);
+    client.on("connect", () => {
+      client.subscribe("aquarium/status");
+    });
 
-  client.on("connect", () => {
-    console.log("Połączono z MQTT");
-    client.subscribe("aquarium/status");
-  });
-
-  client.on("message", (topic, message) => {
-    if (topic === "aquarium/status") {
-      const data = JSON.parse(message.toString());
+    client.on("message", (topic, msg) => {
+      const data = JSON.parse(msg.toString());
       document.getElementById("temp").innerText = data.temp.toFixed(1);
       document.getElementById("target").innerText = data.target.toFixed(1);
       if (data.time) document.getElementById("localTime").innerText = data.time;
+    });
+
+    function publish(topic, message) {
+      client.publish(topic, message);
     }
-  });
 
-  function publish(topic, message) {
-    console.log("MQTT PUB:", topic, message);
-    client.publish(topic, message);
-  }
-
-  function setHeater() {
-    const val = document.getElementById("setTemp").value;
-    if (val) publish("aquarium/heater/set", val);
-  }
-
-  function setFeedTimes() {
-    const h1 = document.getElementById("h1").value;
-    const m1 = document.getElementById("m1").value;
-    const h2 = document.getElementById("h2").value;
-    const m2 = document.getElementById("m2").value;
-    if (h1 && m1 && h2 && m2) {
-      const msg = `${h1},${m1},${h2},${m2}`;
-      publish("aquarium/feedtimes/set", msg);
-      document.getElementById("feed1").innerText = `${h1.padStart(2, '0')}:${m1.padStart(2, '0')}`;
-      document.getElementById("feed2").innerText = `${h2.padStart(2, '0')}:${m2.padStart(2, '0')}`;
+    function setTemp() {
+      const val = document.getElementById("setTemp").value;
+      if (val) publish("aquarium/heater/set", val);
     }
-  }
-</script>
 
+    function setFeed() {
+      const h1 = document.getElementById("h1").value;
+      const m1 = document.getElementById("m1").value;
+      const h2 = document.getElementById("h2").value;
+      const m2 = document.getElementById("m2").value;
+      publish("aquarium/feedtimes/set", `${h1},${m1},${h2},${m2}`);
+    }
+  </script>
 </body>
 </html>
