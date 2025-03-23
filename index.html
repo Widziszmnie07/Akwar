@@ -8,8 +8,8 @@
     h1 { color: #0066cc; }
     h2 { color: #004c99; }
     .section { background: #ffffff; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0px 2px 5px rgba(0,0,0,0.1); }
-    a.button, button { display: inline-block; padding: 8px 12px; margin: 4px 2px; background: #0066cc; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; }
-    a.button:hover, button:hover { background: #004c99; }
+    button { padding: 8px 12px; margin: 4px 2px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #004c99; }
     input[type='text'] { padding: 5px; border: 1px solid #ccc; border-radius: 4px; width: 40px; }
   </style>
 </head>
@@ -51,7 +51,13 @@
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
-  const client = mqtt.connect("wss://58ec15cbf38243588a5903e2ad4e9c1c.s1.eu.hivemq.cloud:8884/mqtt"); // dostosuj adres i port
+  const options = {
+    clientId: "WebClient_" + Math.random().toString(16).substr(2, 8),
+    username: "Strona",
+    password: "Haslo123"
+  };
+
+  const client = mqtt.connect("ws://58ec15cbf38243588a5903e2ad4e9c1c.s1.eu.hivemq.cloud:8884/mqtt", options);
 
   client.on("connect", () => {
     console.log("Połączono z MQTT");
@@ -68,6 +74,7 @@
   });
 
   function publish(topic, message) {
+    console.log("MQTT PUB:", topic, message);
     client.publish(topic, message);
   }
 
