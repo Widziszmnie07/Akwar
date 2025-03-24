@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
@@ -103,8 +103,23 @@
     h2 = Math.max(0, Math.min(23, h2));
     m2 = Math.max(0, Math.min(59, m2));
 
+    const h1Str = h1.toString().padStart(2, '0');
+    const m1Str = m1.toString().padStart(2, '0');
+    const h2Str = h2.toString().padStart(2, '0');
+    const m2Str = m2.toString().padStart(2, '0');
+
+    feed1Str = `${h1Str}:${m1Str}`;
+    feed2Str = `${h2Str}:${m2Str}`;
+    document.getElementById("feed1").innerText = feed1Str;
+    document.getElementById("feed2").innerText = feed2Str;
+
     const msg = `${h1},${m1},${h2},${m2}`;
     publish("aquarium/feedtimes/set", msg);
+
+    document.getElementById("h1").value = "";
+    document.getElementById("m1").value = "";
+    document.getElementById("h2").value = "";
+    document.getElementById("m2").value = "";
   }
 
   function updateCountdown() {
