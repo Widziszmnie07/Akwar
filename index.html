@@ -52,6 +52,9 @@
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
+  let feed1Str = "--:--";
+  let feed2Str = "--:--";
+
   const client = mqtt.connect("wss://58ec15cbf38243588a5903e2ad4e9c1c.s1.eu.hivemq.cloud:8884/mqtt", {
     clientId: "WebClient_" + Math.random().toString(16).substr(2, 8),
     username: "Strona",
@@ -60,17 +63,23 @@
 
   client.on("connect", () => {
     client.subscribe("aquarium/status");
+    client.subscribe("aquarium/feedtimes/status");
   });
 
   client.on("message", (topic, message) => {
+    const data = JSON.parse(message.toString());
+
     if (topic === "aquarium/status") {
-      const data = JSON.parse(message.toString());
       document.getElementById("temp").innerText = data.temp.toFixed(1);
       document.getElementById("target").innerText = data.target.toFixed(1);
       if (data.time) document.getElementById("localTime").innerText = data.time;
+    }
 
-      if (localStorage.getItem("feed1")) document.getElementById("feed1").innerText = localStorage.getItem("feed1");
-      if (localStorage.getItem("feed2")) document.getElementById("feed2").innerText = localStorage.getItem("feed2");
+    if (topic === "aquarium/feedtimes/status") {
+      feed1Str = data.feed1;
+      feed2Str = data.feed2;
+      document.getElementById("feed1").innerText = feed1Str;
+      document.getElementById("feed2").innerText = feed2Str;
     }
   });
 
@@ -96,22 +105,13 @@
 
     const msg = `${h1},${m1},${h2},${m2}`;
     publish("aquarium/feedtimes/set", msg);
-
-    const f1 = `${h1Str}:${m1Str}`;
-    const f2 = `${h2Str}:${m2Str}`;
-    document.getElementById("feed1").innerText = f1;
-    document.getElementById("feed2").innerText = f2;
-    localStorage.setItem("feed1", f1);
-    localStorage.setItem("feed2", f2);
   }
 
   function updateCountdown() {
+    if (feed1Str === "--:--" || feed2Str === "--:--") return;
+
     const now = new Date();
     const currentSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-
-    const feed1Str = localStorage.getItem("feed1");
-    const feed2Str = localStorage.getItem("feed2");
-    if (!feed1Str || !feed2Str) return;
 
     const [h1, m1] = feed1Str.split(":").map(Number);
     const [h2, m2] = feed2Str.split(":").map(Number);
