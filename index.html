@@ -2,7 +2,6 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sterownik Akwarystyczny (MQTT)</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f0f8ff; margin: 20px; }
@@ -15,45 +14,59 @@
   </style>
 </head>
 <body>
+
 <h1>Sterownik Akwarystyczny (MQTT)</h1>
 <p>Czas lokalny: <strong><span id="localTime">--:--</span></strong></p>
+
 <div class="section">
   <h2>Oświetlenie</h2>
   <button onclick="publish('aquarium/light', 'on')">Włącz</button>
   <button onclick="publish('aquarium/light', 'off')">Wyłącz</button>
 </div>
+
 <div class="section">
   <h2>Grzałka</h2>
   <p>Aktualna temperatura: <strong><span id="temp">--</span> °C</strong></p>
   <p>Temperatura zadana: <strong><span id="target">--</span> °C</strong></p>
   <p>Nowa temperatura: <input type="text" id="setTemp"> <button onclick="setHeater()">Ustaw</button></p>
 </div>
+
 <div class="section">
   <h2>Pompka</h2>
   <button onclick="publish('aquarium/pump', 'on')">Włącz</button>
   <button onclick="publish('aquarium/pump', 'off')">Wyłącz</button>
 </div>
+
 <div class="section">
   <h2>Karmienie</h2>
   <p>Karmienie 1: <strong><span id="feed1">--:--</span></strong></p>
   <p>Karmienie 2: <strong><span id="feed2">--:--</span></strong></p>
   <p>Odliczanie: <strong><span id="nextFeed">--:--</span></strong></p>
+  <p>
+    Godzina 1: <input type="text" id="h1"> : <input type="text" id="m1">
+    Godzina 2: <input type="text" id="h2"> : <input type="text" id="m2">
+    <button onclick="setFeedTimes()">Ustaw</button>
+  </p>
   <button onclick="feedNow()">Podaj pokarm</button>
 </div>
+
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
   let feed1Str = "--:--";
   let feed2Str = "--:--";
+
   const client = mqtt.connect("wss://58ec15cbf38243588a5903e2ad4e9c1c.s1.eu.hivemq.cloud:8884/mqtt", {
     clientId: "WebClient_" + Math.random().toString(16).substr(2, 8),
     username: "Strona",
     password: "Haslo123"
   });
+
   client.on("connect", () => {
     client.subscribe("aquarium/status");
     client.subscribe("aquarium/feedtimes/status");
     client.subscribe("aquarium/feed/confirm");
   });
+
   client.on("message", (topic, message) => {
     const data = JSON.parse(message.toString());
     if (topic === "aquarium/status") {
@@ -71,16 +84,35 @@
       alert("Pokarm został podany!");
     }
   });
+
   function publish(topic, message) {
     client.publish(topic, message);
   }
+
   function setHeater() {
     const temp = document.getElementById("setTemp").value;
     if (temp) publish("aquarium/heater/set", temp);
   }
+
+  function setFeedTimes() {
+    let h1 = parseInt(document.getElementById("h1").value) || 0;
+    let m1 = parseInt(document.getElementById("m1").value) || 0;
+    let h2 = parseInt(document.getElementById("h2").value) || 0;
+    let m2 = parseInt(document.getElementById("m2").value) || 0;
+
+    h1 = Math.min(23, Math.max(0, h1));
+    m1 = Math.min(59, Math.max(0, m1));
+    h2 = Math.min(23, Math.max(0, h2));
+    m2 = Math.min(59, Math.max(0, m2));
+
+    const msg = `${h1},${m1},${h2},${m2}`;
+    publish("aquarium/feedtimes/set", msg);
+  }
+
   function feedNow() {
     publish("aquarium/feed", "now");
   }
+
   function updateCountdown() {
     if (feed1Str === "--:--" || feed2Str === "--:--") return;
     const now = new Date();
@@ -89,20 +121,16 @@
     const [h2, m2] = feed2Str.split(":" ).map(Number);
     const f1 = h1 * 60 + m1;
     const f2 = h2 * 60 + m2;
-    let next;
-    if (current < f1) {
-      next = f1;
-    } else if (current < f2) {
-      next = f2;
-    } else {
-      next = f1 + 1440;
-    }
+
+    let next = (f1 > current) ? f1 : (f2 > current) ? f2 : f1 + 1440;
     const diff = next - current;
-    const hours = Math.floor(diff / 60);
+    const hours = Math.floor(diff / 60) % 24;
     const mins = diff % 60;
     document.getElementById("nextFeed").innerText = `${hours}:${mins.toString().padStart(2, '0')}`;
   }
+
   setInterval(updateCountdown, 1000);
 </script>
+
 </body>
 </html>
