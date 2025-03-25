@@ -52,8 +52,8 @@
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
-  let feed1Str = "12:00";
-  let feed2Str = "22:00";
+  let feed1Str = "--:--";
+  let feed2Str = "--:--";
 
   const client = mqtt.connect("wss://58ec15cbf38243588a5903e2ad4e9c1c.s1.eu.hivemq.cloud:8884/mqtt", {
     clientId: "WebClient_" + Math.random().toString(16).substr(2, 8),
@@ -79,10 +79,10 @@
       feed2Str = data.feed2;
       document.getElementById("feed1").innerText = feed1Str;
       document.getElementById("feed2").innerText = feed2Str;
-      document.getElementById("h1").value = feed1Str.split(":" )[0];
-      document.getElementById("m1").value = feed1Str.split(":" )[1];
-      document.getElementById("h2").value = feed2Str.split(":" )[0];
-      document.getElementById("m2").value = feed2Str.split(":" )[1];
+      if (!document.getElementById("h1").value) document.getElementById("h1").value = feed1Str.split(":" )[0];
+      if (!document.getElementById("m1").value) document.getElementById("m1").value = feed1Str.split(":" )[1];
+      if (!document.getElementById("h2").value) document.getElementById("h2").value = feed2Str.split(":" )[0];
+      if (!document.getElementById("m2").value) document.getElementById("m2").value = feed2Str.split(":" )[1];
     }
     if (topic === "aquarium/feed/confirm") {
       alert("Pokarm został podany!");
@@ -117,22 +117,10 @@
     publish("aquarium/feed", "now");
   }
 
-  function updateCountdown() {
+  setInterval(() => {
     const now = new Date();
-    const current = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-    const [h1, m1] = feed1Str.split(":" ).map(Number);
-    const [h2, m2] = feed2Str.split(":" ).map(Number);
-    const f1 = h1 * 3600 + m1 * 60;
-    const f2 = h2 * 3600 + m2 * 60;
-    let next = f1 > current ? f1 : (f2 > current ? f2 : f1 + 86400);
-    const diff = next - current;
-    const hours = Math.floor(diff / 3600);
-    const mins = Math.floor((diff % 3600) / 60);
-    const secs = diff % 60;
-    document.getElementById("nextFeed").innerText = `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-
-  setInterval(updateCountdown, 1000);
+    document.getElementById("localTime").innerText = now.toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' });
+  }, 1000);
 </script>
 
 </body>
