@@ -96,12 +96,8 @@
   }
 
   function setHeater() {
-    const temp = parseFloat(document.getElementById("setTemp").value);
-    if (!isNaN(temp)) {
-      publish("aquarium/heater/set", temp);
-    } else {
-      alert("Podaj prawidłową temperaturę!");
-    }
+    const temp = document.getElementById("setTemp").value;
+    if (temp) publish("aquarium/heater/set", temp);
   }
 
   function setFeedTimes() {
@@ -115,13 +111,8 @@
     h2 = Math.min(23, Math.max(0, h2));
     m2 = Math.min(59, Math.max(0, m2));
 
-    const msg = `${h1},${m1},${h2},${m2}`;
+    const msg = ${h1},${m1},${h2},${m2};
     publish("aquarium/feedtimes/set", msg);
-    // Zaktualizuj wartości feed1 i feed2 po ustawieniu
-    feed1Str = `${h1}:${m1.toString().padStart(2, '0')}`;
-    feed2Str = `${h2}:${m2.toString().padStart(2, '0')}`;
-    document.getElementById("feed1").innerText = feed1Str;
-    document.getElementById("feed2").innerText = feed2Str;
   }
 
   function feedNow() {
@@ -129,10 +120,7 @@
   }
 
   function updateCountdown() {
-    if (feed1Str === "--:--" || feed2Str === "--:--") {
-      document.getElementById("nextFeed").innerText = "--:--";
-      return;
-    }
+    if (feed1Str === "--:--" || feed2Str === "--:--") return;
     const now = new Date();
     const current = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
     const [h1, m1] = feed1Str.split(":").map(Number);
@@ -144,7 +132,7 @@
     const hours = Math.floor(diff / 3600);
     const mins = Math.floor((diff % 3600) / 60);
     const secs = diff % 60;
-    document.getElementById("nextFeed").innerText = `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    document.getElementById("nextFeed").innerText = ${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')};
   }
 
   setInterval(updateCountdown, 1000);
