@@ -79,10 +79,12 @@
       feed2Str = data.feed2;
       document.getElementById("feed1").innerText = feed1Str;
       document.getElementById("feed2").innerText = feed2Str;
-      document.getElementById("h1").value = feed1Str.split(":" )[0];
-      document.getElementById("m1").value = feed1Str.split(":" )[1];
-      document.getElementById("h2").value = feed2Str.split(":" )[0];
-      document.getElementById("m2").value = feed2Str.split(":" )[1];
+      const [h1, m1] = feed1Str.split(":" ).map(Number);
+      const [h2, m2] = feed2Str.split(":" ).map(Number);
+      document.getElementById("h1").value = h1;
+      document.getElementById("m1").value = m1;
+      document.getElementById("h2").value = h2;
+      document.getElementById("m2").value = m2;
     }
     if (topic === "aquarium/feed/confirm") {
       alert("Pokarm został podany!");
@@ -116,24 +118,6 @@
   function feedNow() {
     publish("aquarium/feed", "now");
   }
-
-  function updateCountdown() {
-    if (feed1Str === "--:--" || feed2Str === "--:--") return;
-    const now = new Date();
-    const current = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-    const [h1, m1] = feed1Str.split(":" ).map(Number);
-    const [h2, m2] = feed2Str.split(":" ).map(Number);
-    const f1 = h1 * 3600 + m1 * 60;
-    const f2 = h2 * 3600 + m2 * 60;
-    let next = f1 > current ? f1 : (f2 > current ? f2 : f1 + 86400);
-    const diff = next - current;
-    const hours = Math.floor(diff / 3600);
-    const mins = Math.floor((diff % 3600) / 60);
-    const secs = diff % 60;
-    document.getElementById("nextFeed").innerText = `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-
-  setInterval(updateCountdown, 1000);
 </script>
 
 </body>
