@@ -96,8 +96,12 @@
   }
 
   function setHeater() {
-    const temp = document.getElementById("setTemp").value;
-    if (temp) publish("aquarium/heater/set", temp);
+    const temp = parseFloat(document.getElementById("setTemp").value);
+    if (!isNaN(temp)) {
+      publish("aquarium/heater/set", temp);
+    } else {
+      alert("Podaj prawidłową temperaturę!");
+    }
   }
 
   function setFeedTimes() {
@@ -120,7 +124,10 @@
   }
 
   function updateCountdown() {
-    if (feed1Str === "--:--" || feed2Str === "--:--") return;
+    if (feed1Str === "--:--" || feed2Str === "--:--") {
+      document.getElementById("nextFeed").innerText = "--:--";
+      return;
+    }
     const now = new Date();
     const current = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
     const [h1, m1] = feed1Str.split(":").map(Number);
