@@ -81,10 +81,10 @@
       document.getElementById("feed2").innerText = feed2Str;
       const [h1, m1] = feed1Str.split(":" ).map(Number);
       const [h2, m2] = feed2Str.split(":" ).map(Number);
-      document.getElementById("h1").value = h1;
-      document.getElementById("m1").value = m1;
-      document.getElementById("h2").value = h2;
-      document.getElementById("m2").value = m2;
+      document.getElementById("h1").value = h1.toString().padStart(2, '0');
+      document.getElementById("m1").value = m1.toString().padStart(2, '0');
+      document.getElementById("h2").value = h2.toString().padStart(2, '0');
+      document.getElementById("m2").value = m2.toString().padStart(2, '0');
     }
     if (topic === "aquarium/feed/confirm") {
       alert("Pokarm został podany!");
@@ -118,6 +118,8 @@
   function feedNow() {
     publish("aquarium/feed", "now");
   }
+
+  setInterval(() => publish("aquarium/status", ""), 5000);
 </script>
 
 </body>
