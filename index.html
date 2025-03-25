@@ -16,14 +16,18 @@
 <body>
 
 <h1>Sterownik Akwarystyczny (MQTT)</h1>
+
+<!-- Czas lokalny -->
 <p>Czas lokalny: <strong><span id="localTime">--:--</span></strong></p>
 
+<!-- Oświetlenie -->
 <div class="section">
   <h2>Oświetlenie</h2>
   <button onclick="publish('aquarium/light', 'on')">Włącz</button>
   <button onclick="publish('aquarium/light', 'off')">Wyłącz</button>
 </div>
 
+<!-- Grzałka -->
 <div class="section">
   <h2>Grzałka</h2>
   <p>Aktualna temperatura: <strong><span id="temp">--</span> °C</strong></p>
@@ -31,20 +35,22 @@
   <p>Nowa temperatura: <input type="text" id="setTemp"> <button onclick="setHeater()">Ustaw</button></p>
 </div>
 
+<!-- Pompka -->
 <div class="section">
   <h2>Pompka</h2>
   <button onclick="publish('aquarium/pump', 'on')">Włącz</button>
   <button onclick="publish('aquarium/pump', 'off')">Wyłącz</button>
 </div>
 
+<!-- Karmienie -->
 <div class="section">
   <h2>Karmienie</h2>
   <p>Karmienie 1: <strong><span id="feed1">--:--</span></strong></p>
   <p>Karmienie 2: <strong><span id="feed2">--:--</span></strong></p>
   <p>Odliczanie: <strong><span id="nextFeed">--:--</span></strong></p>
   <p>
-    Godzina 1: <input type="text" id="h1" autocomplete="off"> : <input type="text" id="m1" autocomplete="off">
-    Godzina 2: <input type="text" id="h2" autocomplete="off"> : <input type="text" id="m2" autocomplete="off">
+    Godzina 1: <input type="text" id="h1"> : <input type="text" id="m1">
+    Godzina 2: <input type="text" id="h2"> : <input type="text" id="m2">
     <button onclick="setFeedTimes()">Ustaw</button>
   </p>
   <button onclick="feedNow()">Podaj pokarm</button>
@@ -52,8 +58,8 @@
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
-  let feed1Str = "12:00";
-  let feed2Str = "22:00";
+  let feed1Str = "--:--";
+  let feed2Str = "--:--";
 
   const client = mqtt.connect("wss://58ec15cbf38243588a5903e2ad4e9c1c.s1.eu.hivemq.cloud:8884/mqtt", {
     clientId: "WebClient_" + Math.random().toString(16).substr(2, 8),
@@ -114,11 +120,11 @@
   }
 
   function updateCountdown() {
-    if (!feed1Str || !feed2Str) return;
+    if (feed1Str === "--:--" || feed2Str === "--:--") return;
     const now = new Date();
     const current = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-    const [h1, m1] = feed1Str.split(":" ).map(Number);
-    const [h2, m2] = feed2Str.split(":" ).map(Number);
+    const [h1, m1] = feed1Str.split(":").map(Number);
+    const [h2, m2] = feed2Str.split(":").map(Number);
     const f1 = h1 * 3600 + m1 * 60;
     const f2 = h2 * 3600 + m2 * 60;
     let next = f1 > current ? f1 : (f2 > current ? f2 : f1 + 86400);
