@@ -117,6 +117,11 @@
 
     const msg = `${h1},${m1},${h2},${m2}`;
     publish("aquarium/feedtimes/set", msg);
+    // Zaktualizuj wartości feed1 i feed2 po ustawieniu
+    feed1Str = `${h1}:${m1.toString().padStart(2, '0')}`;
+    feed2Str = `${h2}:${m2.toString().padStart(2, '0')}`;
+    document.getElementById("feed1").innerText = feed1Str;
+    document.getElementById("feed2").innerText = feed2Str;
   }
 
   function feedNow() {
